@@ -6,3 +6,40 @@
 2026-03-17 22:17:09,766  ERROR    Error generando art�culo: HTTP Error 400: Bad Request
 2026-03-17 22:19:32,665  INFO     Generating article: Best Fish Finders Under $200 in 2026
 2026-03-17 22:19:33,005  ERROR    Error generando art�culo: HTTP Error 400: Bad Request
+2026-03-17 22:20:47,061  INFO     Generating article: Best Fish Finders Under $200 in 2026
+2026-03-17 22:21:29,052  INFO     Article saved: d:\Escritorio\tacklereviewer\posts\best-fish-finders-under-200-in-2026.html
+2026-03-17 22:21:29,054  INFO     index.html rebuilt
+2026-03-17 22:21:29,054  INFO     sitemap.xml rebuilt
+2026-03-17 22:21:31,952  WARNING  git: remote: error: GH013: Repository rule violations found for refs/heads/main.        
+remote: 
+remote: - GITHUB PUSH PROTECTION        
+remote:   —————————————————————————————————————————        
+remote:     Resolve the following violations before pushing again        
+remote: 
+remote:     - Push cannot contain secrets        
+remote: 
+remote:             
+remote:      (?) Learn how to resolve a blocked push        
+remote:      https://docs.github.com/code-security/secret-scanning/working-with-secret-scanning-and-push-protection/working-with-push-protection-from-the-command-line#resolving-a-blocked-push        
+remote:             
+remote:             
+remote:       —— Anthropic API Key —————————————————————————————————        
+remote:        locations:        
+remote:          - commit: f7486c8dd00e42f2fe77ccba941a81ee5804295c        
+remote:            path: scripts/content_bot.py:29        
+remote:             
+remote:        (?) To push, remove secret from commit(s) or follow this URL to allow the secret.        
+remote:        https://github.com/felipelerner/tacklereviewer/security/secret-scanning/unblock-secret/3B65tEgrE7S4tEsO4hndWIt7SA2        
+remote:             
+remote: 
+remote: 
+To https://github.com/felipelerner/tacklereviewer.git
+ ! [remote rejected] main -> main (push declined due to repository rule violations)
+error: failed to push some refs to 'https://github.com/felipelerner/tacklereviewer.git'
+2026-03-17 22:21:31,953  INFO     Done. 14 topics remaining.
+2026-03-17 22:29:15,365  INFO     Generating article: Best Spinning Rods for Bass Fishing 2026
+2026-03-17 22:29:15,955  ERROR    Error generando art�culo: HTTP Error 401: Unauthorized
+2026-03-17 22:30:49,804  INFO     Generating article: Best Spinning Rods for Bass Fishing 2026
+2026-03-17 22:31:36,426  ERROR    Error generando art�culo: Expecting ',' delimiter: line 36 column 3 (char 7121)
+2026-03-17 22:31:58,635  INFO     Generating article: Best Spinning Rods for Bass Fishing 2026
+2026-03-17 22:32:42,388  ERROR    Error generando art�culo: Expecting ',' delimiter: line 33 column 3 (char 7787)

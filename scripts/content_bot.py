@@ -1,3 +1,5 @@
+
+
 """
 TackleReviewer — Content Bot
 Genera artículos SEO de pesca con Claude API y los publica automáticamente.
@@ -9,6 +11,7 @@ Uso:
     python scripts/content_bot.py --build    # solo regenera el index y el sitemap
 """
 
+import os
 import json
 import time
 import random
@@ -63,26 +66,45 @@ TOPICS = [
 
 # ── Claude API ────────────────────────────────────────────────────────────────
 
-def call_claude(prompt: str) -> str:
-    payload = json.dumps({
-        "model": "claude-sonnet-4-20250514",
-        "max_tokens": 2000,
-        "messages": [{"role": "user", "content": prompt}]
-    }).encode()
+def call_claude(prompt: str, retries: int = 3) -> str:
+    for attempt in range(retries):
+        try:
+            payload = json.dumps({
+                "model": "claude-sonnet-4-20250514",
+                "max_tokens": 2500,
+                "messages": [{"role": "user", "content": prompt}]
+            }).encode()
 
-    req = urllib.request.Request(
-        "https://api.anthropic.com/v1/messages",
-        data=payload,
-        headers={
-            "Content-Type":      "application/json",
-            "x-api-key":         ANTHROPIC_KEY,
-            "anthropic-version": "2023-06-01",
-        },
-        method="POST"
-    )
-    with urllib.request.urlopen(req, timeout=60) as r:
-        data = json.loads(r.read().decode())
-    return data["content"][0]["text"]
+            req = urllib.request.Request(
+                "https://api.anthropic.com/v1/messages",
+                data=payload,
+                headers={
+                    "Content-Type":      "application/json",
+                    "x-api-key":         ANTHROPIC_KEY,
+                    "anthropic-version": "2023-06-01",
+                },
+                method="POST"
+            )
+            with urllib.request.urlopen(req, timeout=60) as r:
+                data = json.loads(r.read().decode())
+            text = data["content"][0]["text"]
+
+            # Intentar parsear JSON — si falla, reintentar
+            try:
+                json.loads(text)
+                return text
+            except json.JSONDecodeError:
+                match = re.search(r"\{.*\}", text, re.DOTALL)
+                if match:
+                    json.loads(match.group())  # validar
+                    return match.group()
+                raise ValueError("JSON inválido")
+
+        except Exception as e:
+            log.warning(f"Intento {attempt+1}/{retries} fallido: {e}")
+            if attempt < retries - 1:
+                time.sleep(5)
+    raise ValueError(f"Falló después de {retries} intentos")
 
 
 def amazon_link(product: str, tag: str) -> str:
