@@ -73,3 +73,11 @@ error: failed to push some refs to 'https://github.com/felipelerner/tacklereview
 2026-03-17 22:58:16,620  WARNING  Intento 2/3 fallido: Expecting ',' delimiter: line 42 column 3 (char 9037)
 2026-03-17 22:59:13,747  WARNING  Intento 3/3 fallido: Expecting ',' delimiter: line 42 column 3 (char 7841)
 2026-03-17 22:59:13,748  ERROR    Error generando articulo: Fallo despues de 3 intentos
+2026-03-17 23:01:33,401  INFO     Modo batch: 10 articulos con fechas escalonadas
+2026-03-17 23:01:33,401  INFO     Articulo 1/10 — fecha: 2026-03-08
+2026-03-17 23:01:33,402  INFO     Generating: Shimano vs Daiwa: Which Reel Brand Wins in 2026?
+2026-03-17 23:02:23,659  WARNING  Intento 1/3 fallido: Expecting ',' delimiter: line 36 column 3 (char 7465)
+2026-03-17 23:03:22,258  WARNING  Intento 2/3 fallido: Expecting ',' delimiter: line 33 column 3 (char 7336)
+2026-03-17 23:04:21,623  INFO     Saved: shimano-vs-daiwa-which-reel-brand-wins-in-2026.html
+2026-03-17 23:04:21,625  INFO     index.html rebuilt
+2026-03-17 23:04:21,626  INFO     sitemap.xml rebuilt
