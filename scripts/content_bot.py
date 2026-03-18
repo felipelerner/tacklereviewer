@@ -765,7 +765,7 @@ def load_posts_meta() -> list:
 
 def save_posts_meta(meta: list):
     DATA_FILE.parent.mkdir(exist_ok=True)
-    DATA_FILE.write_text(json.dumps(meta, indent=2, ensure_ascii=False))
+    DATA_FILE.write_text(json.dumps(meta, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
 def run_once(date_override: str = None) -> bool:
