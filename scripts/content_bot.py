@@ -760,7 +760,7 @@ def git_push(message: str) -> bool:
 # ── Core ───────────────────────────────────────────────────────────────────────
 
 def load_posts_meta() -> list:
-    return json.loads(DATA_FILE.read_text()) if DATA_FILE.exists() else []
+    return json.loads(DATA_FILE.read_text(encoding="utf-8")) if DATA_FILE.exists() else []
 
 
 def save_posts_meta(meta: list):
