@@ -25,8 +25,8 @@ from pathlib import Path
 REPO_DIR      = Path(__file__).parent.parent
 POSTS_DIR     = REPO_DIR / "posts"
 DATA_FILE     = REPO_DIR / "data" / "posts.json"
-AMAZON_TAG    = "tacklerev-20"          # ← reemplazá con tu tag de Amazon Associates
-ANTHROPIC_KEY = "TU_API_KEY_AQUI"      # ← reemplazá con tu API key de Claude
+AMAZON_TAG = "tacklereviewe-20"
+ANTHROPIC_KEY = "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"      # ← reemplazá con tu API key de Claude
 ARTICLES_PER_DAY = 1                    # genera 1 artículo por día (suficiente para SEO)
 LOOP_INTERVAL = 86400                   # 24 horas en segundos
 
