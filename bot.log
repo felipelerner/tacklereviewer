@@ -209,3 +209,11 @@ error: failed to push some refs to 'https://github.com/felipelerner/tacklereview
 2026-03-17 23:32:38,608  WARNING  JSON parse intento 4/4: Claude fallo despues de 1 intentos
 2026-03-17 23:32:38,612  ERROR    Error generando articulo: No se pudo obtener JSON valido despues de todos los intentos
 2026-03-17 23:32:38,614  INFO     Pausa 58s entre articulos...
+2026-03-17 23:55:28,196  INFO     Pausa de 30s antes de generar...
+2026-03-17 23:55:58,197  INFO     Generating: Best Fish Finders Under $500: 7 Smart Sonar Units That Actually Catch More Fish
+2026-03-17 23:57:05,976  WARNING  JSON invalido en intento 1/4: No se pudo parsear: line 1 column 1 (char 0)
+2026-03-17 23:57:29,969  INFO     Saved: best-fish-finders-under-500-7-smart-sonar-units-that-actually-catch-more-fish.html
+2026-03-17 23:57:29,971  INFO     index.html rebuilt
+2026-03-17 23:57:29,971  INFO     sitemap.xml rebuilt
+2026-03-17 23:57:32,869  INFO     Pushed: content: Best Fish Finders Under $500: 7 Smart Sonar Units That Actua
+2026-03-17 23:57:32,870  INFO     Done. ~19 titulos restantes.
