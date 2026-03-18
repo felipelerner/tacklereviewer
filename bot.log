@@ -81,3 +81,131 @@ error: failed to push some refs to 'https://github.com/felipelerner/tacklereview
 2026-03-17 23:04:21,623  INFO     Saved: shimano-vs-daiwa-which-reel-brand-wins-in-2026.html
 2026-03-17 23:04:21,625  INFO     index.html rebuilt
 2026-03-17 23:04:21,626  INFO     sitemap.xml rebuilt
+2026-03-17 23:04:24,758  INFO     Pushed: content: Shimano vs Daiwa: Which Reel Brand Wins in 2026?
+2026-03-17 23:04:24,759  INFO     Done. 28 topics remaining.
+2026-03-17 23:04:24,760  INFO     Pausa 49s...
+2026-03-17 23:05:13,761  INFO     Articulo 2/10 — fecha: 2026-03-09
+2026-03-17 23:05:13,762  INFO     Generating: How to Choose a Fish Finder: Complete Buyer's Guide
+2026-03-17 23:06:11,087  INFO     Saved: how-to-choose-a-fish-finder-complete-buyers-guide.html
+2026-03-17 23:06:11,089  INFO     index.html rebuilt
+2026-03-17 23:06:11,090  INFO     sitemap.xml rebuilt
+2026-03-17 23:06:13,878  INFO     Pushed: content: How to Choose a Fish Finder: Complete Buyer's Guide
+2026-03-17 23:06:13,878  INFO     Done. 27 topics remaining.
+2026-03-17 23:06:13,880  INFO     Pausa 25s...
+2026-03-17 23:06:38,881  INFO     Articulo 3/10 — fecha: 2026-03-10
+2026-03-17 23:06:38,882  INFO     Generating: The 5 Best Lures for Largemouth Bass This Season
+2026-03-17 23:07:38,939  WARNING  Intento 1/3 fallido: The read operation timed out
+2026-03-17 23:08:43,977  WARNING  Intento 2/3 fallido: The read operation timed out
+2026-03-17 23:09:47,577  WARNING  Intento 3/3 fallido: Expecting ',' delimiter: line 54 column 691 (char 9969)
+2026-03-17 23:09:47,577  ERROR    Error generando articulo: Fallo despues de 3 intentos
+2026-03-17 23:10:53,975  INFO     Modo batch: 10 artículos con fechas escalonadas
+2026-03-17 23:10:53,976  INFO     Artículo 1/10 — fecha: 2026-03-08
+2026-03-17 23:10:53,976  INFO     Solo 0 títulos disponibles — generando más...
+2026-03-17 23:10:53,977  INFO     Generando 20 títulos con búsqueda de tendencias...
+2026-03-17 23:12:01,777  INFO     Títulos generados: 20
+2026-03-17 23:15:27,718  INFO     Guardados 20 títulos en d:\Escritorio\tacklereviewer\data\titles.json
+2026-03-17 23:15:27,722  INFO     Ahora hay 20 títulos disponibles
+2026-03-17 23:15:27,723  INFO     Generating article: Best Fish Finders Under $500: 7 Smart Sonar Units That Actually Catch More Fish
+2026-03-17 23:15:28,049  WARNING  Intento 1/1 fallido: HTTP Error 429: Too Many Requests
+2026-03-17 23:15:28,049  WARNING  JSON parse intento 1/4: Claude falló después de 1 intentos
+2026-03-17 23:15:33,351  WARNING  Intento 1/1 fallido: HTTP Error 429: Too Many Requests
+2026-03-17 23:15:33,352  WARNING  JSON parse intento 2/4: Claude falló después de 1 intentos
+2026-03-17 23:15:38,709  WARNING  Intento 1/1 fallido: HTTP Error 429: Too Many Requests
+2026-03-17 23:15:38,709  WARNING  JSON parse intento 3/4: Claude falló después de 1 intentos
+2026-03-17 23:15:44,304  WARNING  Intento 1/1 fallido: HTTP Error 429: Too Many Requests
+2026-03-17 23:15:46,155  WARNING  JSON parse intento 4/4: Claude falló después de 1 intentos
+2026-03-17 23:15:46,156  ERROR    Error generando artículo: No se pudo obtener JSON válido después de todos los intentos
+2026-03-17 23:15:46,156  WARNING  Artículo fallido, continuando con el siguiente...
+2026-03-17 23:15:46,156  INFO     Artículo 2/10 — fecha: 2026-03-09
+2026-03-17 23:15:46,157  INFO     Generating article: Best Fish Finders Under $500: 7 Smart Sonar Units That Actually Catch More Fish
+2026-03-17 23:15:46,444  WARNING  Intento 1/1 fallido: HTTP Error 429: Too Many Requests
+2026-03-17 23:15:46,445  WARNING  JSON parse intento 1/4: Claude falló después de 1 intentos
+2026-03-17 23:15:51,786  WARNING  Intento 1/1 fallido: HTTP Error 429: Too Many Requests
+2026-03-17 23:15:57,244  WARNING  JSON parse intento 2/4: Claude falló después de 1 intentos
+2026-03-17 23:16:02,554  WARNING  Intento 1/1 fallido: HTTP Error 429: Too Many Requests
+2026-03-17 23:16:02,556  WARNING  JSON parse intento 3/4: Claude falló después de 1 intentos
+2026-03-17 23:16:07,863  WARNING  Intento 1/1 fallido: HTTP Error 429: Too Many Requests
+2026-03-17 23:16:07,864  WARNING  JSON parse intento 4/4: Claude falló después de 1 intentos
+2026-03-17 23:16:07,868  ERROR    Error generando artículo: No se pudo obtener JSON válido después de todos los intentos
+2026-03-17 23:16:07,872  WARNING  Artículo fallido, continuando con el siguiente...
+2026-03-17 23:16:07,872  INFO     Artículo 3/10 — fecha: 2026-03-10
+2026-03-17 23:16:07,874  INFO     Generating article: Best Fish Finders Under $500: 7 Smart Sonar Units That Actually Catch More Fish
+2026-03-17 23:16:08,440  WARNING  Intento 1/1 fallido: HTTP Error 429: Too Many Requests
+2026-03-17 23:16:08,441  WARNING  JSON parse intento 1/4: Claude falló después de 1 intentos
+2026-03-17 23:16:13,742  WARNING  Intento 1/1 fallido: HTTP Error 429: Too Many Requests
+2026-03-17 23:16:13,743  WARNING  JSON parse intento 2/4: Claude falló después de 1 intentos
+2026-03-17 23:19:53,370  INFO     Modo batch: 10 artículos con fechas escalonadas
+2026-03-17 23:19:53,371  INFO     Artículo 1/10 — fecha: 2026-03-08
+2026-03-17 23:19:53,373  INFO     Generating article: Best Fish Finders Under $500: 7 Smart Sonar Units That Actually Catch More Fish
+2026-03-17 23:21:23,499  WARNING  Intento 1/1 fallido: The read operation timed out
+2026-03-17 23:21:23,499  WARNING  JSON parse intento 1/4: Claude falló después de 1 intentos
+2026-03-17 23:21:28,962  WARNING  Intento 1/1 fallido: HTTP Error 429: Too Many Requests
+2026-03-17 23:21:28,962  WARNING  JSON parse intento 2/4: Claude falló después de 1 intentos
+2026-03-17 23:21:34,250  WARNING  Intento 1/1 fallido: HTTP Error 429: Too Many Requests
+2026-03-17 23:21:34,251  WARNING  JSON parse intento 3/4: Claude falló después de 1 intentos
+2026-03-17 23:21:39,560  WARNING  Intento 1/1 fallido: HTTP Error 429: Too Many Requests
+2026-03-17 23:21:39,561  WARNING  JSON parse intento 4/4: Claude falló después de 1 intentos
+2026-03-17 23:21:39,562  ERROR    Error generando artículo: No se pudo obtener JSON válido después de todos los intentos
+2026-03-17 23:21:39,565  WARNING  Artículo fallido, continuando con el siguiente...
+2026-03-17 23:21:39,566  INFO     Artículo 2/10 — fecha: 2026-03-09
+2026-03-17 23:21:39,568  INFO     Generating article: Best Fish Finders Under $500: 7 Smart Sonar Units That Actually Catch More Fish
+2026-03-17 23:21:39,860  WARNING  Intento 1/1 fallido: HTTP Error 429: Too Many Requests
+2026-03-17 23:21:39,861  WARNING  JSON parse intento 1/4: Claude falló después de 1 intentos
+2026-03-17 23:21:45,151  WARNING  Intento 1/1 fallido: HTTP Error 429: Too Many Requests
+2026-03-17 23:21:45,152  WARNING  JSON parse intento 2/4: Claude falló después de 1 intentos
+2026-03-17 23:21:50,585  WARNING  Intento 1/1 fallido: HTTP Error 429: Too Many Requests
+2026-03-17 23:21:50,586  WARNING  JSON parse intento 3/4: Claude falló después de 1 intentos
+2026-03-17 23:22:12,550  INFO     Modo batch: 10 artículos con fechas escalonadas
+2026-03-17 23:22:12,551  INFO     Artículo 1/10 — fecha: 2026-03-08
+2026-03-17 23:22:12,552  INFO     Generating article: Best Fish Finders Under $500: 7 Smart Sonar Units That Actually Catch More Fish
+2026-03-17 23:22:12,919  WARNING  Intento 1/1 fallido: HTTP Error 429: Too Many Requests
+2026-03-17 23:22:12,920  WARNING  JSON parse intento 1/4: Claude falló después de 1 intentos
+2026-03-17 23:22:18,283  WARNING  Intento 1/1 fallido: HTTP Error 429: Too Many Requests
+2026-03-17 23:22:18,283  WARNING  JSON parse intento 2/4: Claude falló después de 1 intentos
+2026-03-17 23:22:23,603  WARNING  Intento 1/1 fallido: HTTP Error 429: Too Many Requests
+2026-03-17 23:22:23,604  WARNING  JSON parse intento 3/4: Claude falló después de 1 intentos
+2026-03-17 23:22:29,367  WARNING  Intento 1/1 fallido: HTTP Error 429: Too Many Requests
+2026-03-17 23:22:29,368  WARNING  JSON parse intento 4/4: Claude falló después de 1 intentos
+2026-03-17 23:22:29,369  ERROR    Error generando artículo: No se pudo obtener JSON válido después de todos los intentos
+2026-03-17 23:22:29,369  WARNING  Artículo fallido, continuando con el siguiente...
+2026-03-17 23:22:29,370  INFO     Artículo 2/10 — fecha: 2026-03-09
+2026-03-17 23:22:29,371  INFO     Generating article: Best Fish Finders Under $500: 7 Smart Sonar Units That Actually Catch More Fish
+2026-03-17 23:22:29,654  WARNING  Intento 1/1 fallido: HTTP Error 429: Too Many Requests
+2026-03-17 23:22:29,655  WARNING  JSON parse intento 1/4: Claude falló después de 1 intentos
+2026-03-17 23:22:34,960  WARNING  Intento 1/1 fallido: HTTP Error 429: Too Many Requests
+2026-03-17 23:22:34,961  WARNING  JSON parse intento 2/4: Claude falló después de 1 intentos
+2026-03-17 23:28:45,895  INFO     Modo batch: 10 articulos con fechas escalonadas
+2026-03-17 23:28:45,896  INFO     Articulo 1/10 — fecha: 2026-03-08
+2026-03-17 23:28:45,899  INFO     Pausa de 15s antes de generar...
+2026-03-17 23:29:00,901  INFO     Generating: Best Fish Finders Under $500: 7 Smart Sonar Units That Actually Catch More Fish
+2026-03-17 23:29:01,337  WARNING  Rate limit (429) en intento 1/1
+2026-03-17 23:29:01,338  WARNING  JSON parse intento 1/4: Claude fallo despues de 1 intentos
+2026-03-17 23:29:11,796  WARNING  Rate limit (429) en intento 1/1
+2026-03-17 23:29:11,796  WARNING  JSON parse intento 2/4: Claude fallo despues de 1 intentos
+2026-03-17 23:30:20,852  INFO     Modo batch: 10 articulos con fechas escalonadas
+2026-03-17 23:30:20,853  INFO     Articulo 1/10 — fecha: 2026-03-08
+2026-03-17 23:30:20,854  INFO     Pausa de 15s antes de generar...
+2026-03-17 23:30:35,854  INFO     Generating: Best Fish Finders Under $500: 7 Smart Sonar Units That Actually Catch More Fish
+2026-03-17 23:30:36,453  WARNING  Rate limit (429) en intento 1/1
+2026-03-17 23:30:36,454  WARNING  JSON parse intento 1/4: Claude fallo despues de 1 intentos
+2026-03-17 23:30:46,729  WARNING  Rate limit (429) en intento 1/1
+2026-03-17 23:30:46,729  WARNING  JSON parse intento 2/4: Claude fallo despues de 1 intentos
+2026-03-17 23:30:57,091  WARNING  Rate limit (429) en intento 1/1
+2026-03-17 23:30:57,092  WARNING  JSON parse intento 3/4: Claude fallo despues de 1 intentos
+2026-03-17 23:31:07,396  WARNING  Rate limit (429) en intento 1/1
+2026-03-17 23:31:07,397  WARNING  JSON parse intento 4/4: Claude fallo despues de 1 intentos
+2026-03-17 23:31:07,398  ERROR    Error generando articulo: No se pudo obtener JSON valido despues de todos los intentos
+2026-03-17 23:31:07,398  INFO     Pausa 45s entre articulos...
+2026-03-17 23:31:52,399  INFO     Articulo 2/10 — fecha: 2026-03-09
+2026-03-17 23:31:52,400  INFO     Pausa de 15s antes de generar...
+2026-03-17 23:32:07,401  INFO     Generating: Best Fish Finders Under $500: 7 Smart Sonar Units That Actually Catch More Fish
+2026-03-17 23:32:07,666  WARNING  Rate limit (429) en intento 1/1
+2026-03-17 23:32:07,667  WARNING  JSON parse intento 1/4: Claude fallo despues de 1 intentos
+2026-03-17 23:32:17,966  WARNING  Rate limit (429) en intento 1/1
+2026-03-17 23:32:17,967  WARNING  JSON parse intento 2/4: Claude fallo despues de 1 intentos
+2026-03-17 23:32:28,271  WARNING  Rate limit (429) en intento 1/1
+2026-03-17 23:32:28,271  WARNING  JSON parse intento 3/4: Claude fallo despues de 1 intentos
+2026-03-17 23:32:38,607  WARNING  Rate limit (429) en intento 1/1
+2026-03-17 23:32:38,608  WARNING  JSON parse intento 4/4: Claude fallo despues de 1 intentos
+2026-03-17 23:32:38,612  ERROR    Error generando articulo: No se pudo obtener JSON valido despues de todos los intentos
+2026-03-17 23:32:38,614  INFO     Pausa 58s entre articulos...

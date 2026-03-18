@@ -1,12 +1,13 @@
 """
-TackleReviewer — Content Bot
-Genera artículos SEO de pesca, camping y caza con Claude API.
+Universal Affiliate Content Bot
+Genera articulos SEO con titulos dinamicos basados en tendencias reales.
 
 Uso:
-    python scripts/content_bot.py              # genera 1 artículo
-    python scripts/content_bot.py --loop       # 1 artículo por día indefinidamente
-    python scripts/content_bot.py --batch 10   # genera 10 artículos con fechas escalonadas
-    python scripts/content_bot.py --build      # solo regenera index y sitemap
+    python scripts/content_bot.py                 # genera 1 articulo
+    python scripts/content_bot.py --batch 10      # genera 10 con fechas escalonadas
+    python scripts/content_bot.py --loop          # 1 articulo por dia indefinidamente
+    python scripts/content_bot.py --gentitles 20  # genera y guarda 20 titulos nuevos
+    python scripts/content_bot.py --build         # regenera index y sitemap
 """
 
 import os
@@ -18,17 +19,42 @@ import argparse
 import subprocess
 import urllib.request
 import urllib.parse
+import urllib.error
 import re
 from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Optional
 
 # ── Config ─────────────────────────────────────────────────────────────────────
+SITE_NAME     = "TackleReviewer"
+SITE_URL      = "https://tacklereviewer.vercel.app"
+SITE_TOPIC    = "fishing, hunting, camping and hiking gear"
+SITE_AUDIENCE = "US outdoor enthusiasts and anglers"
+AMAZON_TAG    = "tacklereviewe-20"
+AMAZON_STORE  = "amazon.com"
+
 REPO_DIR      = Path(__file__).parent.parent
 POSTS_DIR     = REPO_DIR / "posts"
 DATA_FILE     = REPO_DIR / "data" / "posts.json"
-AMAZON_TAG    = "tacklereviewe-20"
+TITLES_FILE   = REPO_DIR / "data" / "titles.json"
 ANTHROPIC_KEY = os.environ.get("ANTHROPIC_KEY", "")
+ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-20250514")
 LOOP_INTERVAL = 86400
+
+# Pausas entre llamadas a la API (segundos)
+API_PAUSE_BETWEEN_CALLS = 30
+API_PAUSE_ON_429        = 120
+API_JSON_RETRY_PAUSE    = 12
+BATCH_PAUSE_MIN         = 90
+BATCH_PAUSE_MAX         = 180
+
+# Flags
+ENABLE_WEB_SEARCH_FOR_TITLES   = True
+ENABLE_WEB_SEARCH_FOR_ARTICLES = False
+
+# Límites más conservadores para Tier 1
+MAX_TOKENS_TITLES  = 3500
+MAX_TOKENS_ARTICLE = 3000
 
 logging.basicConfig(
     level=logging.INFO,
@@ -40,165 +66,396 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
-# ── Temas ──────────────────────────────────────────────────────────────────────
-TOPICS = [
-    # Pesca — ya generados (el bot los saltea automáticamente)
-    {"title": "Best Fish Finders Under $200 in 2026", "keyword": "best fish finders under 200", "category": "Electronics", "products": ["Garmin Striker 4", "Humminbird Helix 5", "Lowrance Hook Reveal 5"]},
-    {"title": "Best Spinning Rods for Bass Fishing 2026", "keyword": "best spinning rods bass fishing", "category": "Rods", "products": ["St. Croix Triumph", "Ugly Stik GX2", "Shakespeare Ugly Stik Carbon"]},
-    {"title": "Best Spinning Reels Under $100 — 2026 Review", "keyword": "best spinning reels under 100", "category": "Reels", "products": ["Shimano Sienna FE", "Penn Battle III", "Daiwa BG MQ"]},
-    {"title": "Best Fishing Line for Bass: Mono vs Fluoro vs Braid", "keyword": "best fishing line for bass", "category": "Line", "products": ["PowerPro Spectra", "Berkley Trilene XL", "Seaguar InvizX Fluorocarbon"]},
-
-    # Pesca — títulos variados
-    {"title": "Shimano vs Daiwa: Which Reel Brand Wins in 2026?", "keyword": "shimano vs daiwa reels comparison", "category": "Reels", "products": ["Shimano Stradic FL", "Daiwa BG MQ", "Shimano Sahara FJ"]},
-    {"title": "How to Choose a Fish Finder: Complete Buyer's Guide", "keyword": "how to choose a fish finder", "category": "Electronics", "products": ["Garmin Striker Vivid 7cv", "Humminbird Helix 7", "Lowrance Hook Reveal 7"]},
-    {"title": "The 5 Best Lures for Largemouth Bass This Season", "keyword": "best lures largemouth bass 2026", "category": "Lures", "products": ["Strike King Red Eye Shad", "Zoom Trick Worm", "Rapala Original Floater", "Senko Worm Gary Yamamoto", "Booyah Spinnerbait"]},
-    {"title": "Fly Fishing for Beginners: Gear You Actually Need", "keyword": "fly fishing gear beginners", "category": "Fly Fishing", "products": ["Orvis Clearwater Combo", "Redington Classic Trout", "Rio Gold Fly Line"]},
-    {"title": "Ice Fishing Essentials: What to Buy Before the Season", "keyword": "ice fishing essentials gear list", "category": "Ice Fishing", "products": ["Clam Dave Genz Fish Trap", "13 Fishing Tickle Stick", "Frabill 371 Ice Combo", "Vexilar FL-8"]},
-    {"title": "Saltwater vs Freshwater Reels: What's the Real Difference?", "keyword": "saltwater vs freshwater reels difference", "category": "Saltwater", "products": ["Penn Battle III", "Shimano Stradic SW", "Daiwa BG SW"]},
-    {"title": "Top Trout Lures That Actually Work (Tested on the Water)", "keyword": "best trout lures tested", "category": "Lures", "products": ["Panther Martin Spinner", "Rapala Countdown", "Mepps Aglia", "PowerBait Trout Nuggets"]},
-    {"title": "Waders Buying Guide: Breathable vs Neoprene in 2026", "keyword": "breathable vs neoprene waders guide", "category": "Apparel", "products": ["Simms G3 Guide", "Orvis Silver Sonic", "Hodgman Aesis Breathable"]},
-    {"title": "7 Kayak Fishing Upgrades Worth Every Penny", "keyword": "kayak fishing upgrades accessories", "category": "Kayak", "products": ["YakAttack GearTrac", "Scotty Kayak Rod Holder", "Wilderness Systems Radar 115"]},
-    {"title": "Polarized Fishing Sunglasses: Why They Matter and Which to Buy", "keyword": "polarized fishing sunglasses review", "category": "Accessories", "products": ["Costa Del Mar Fantail", "Oakley Flak 2.0", "Maui Jim Peahi"]},
-    {"title": "Baitcasting for Beginners: The Honest Truth About Reels", "keyword": "baitcasting reels beginners honest review", "category": "Reels", "products": ["Abu Garcia Black Max", "Shimano SLX", "Lew's American Hero Speed Spool"]},
-
-    # Camping & Outdoor
-    {"title": "Best Camping Tents Under $200: Tried and Tested", "keyword": "best camping tents under 200", "category": "Camping", "products": ["REI Co-op Passage 2", "Coleman Sundome 4", "Kelty Acadia 4", "Marmot Tungsten 3P"]},
-    {"title": "A Beginner's Guide to Backpacking Gear in 2026", "keyword": "backpacking gear beginners guide 2026", "category": "Camping", "products": ["Osprey Atmos AG 65", "Big Agnes Copper Spur HV UL2", "MSR PocketRocket 2", "Therm-a-Rest NeoAir XLite"]},
-    {"title": "The Best Sleeping Bags for Cold Weather Camping", "keyword": "best sleeping bags cold weather camping", "category": "Camping", "products": ["Western Mountaineering Alpinlite", "Marmot Trestles 15", "REI Magma 15", "NEMO Disco 15"]},
-    {"title": "Camp Kitchen Essentials: What You Really Need (And What You Don't)", "keyword": "camp kitchen essentials gear", "category": "Camping", "products": ["MSR PocketRocket Deluxe", "GSI Outdoors Pinnacle Camper", "Stanley Adventure Cook Set", "Jetboil Flash"]},
-    {"title": "Best Headlamps for Camping and Hiking — 2026 Picks", "keyword": "best headlamps camping hiking 2026", "category": "Camping", "products": ["Black Diamond Spot 400", "Petzl Actik Core", "Fenix HM65R", "BioLite HeadLamp 330"]},
-    {"title": "How We Tested 6 Portable Water Filters — Our Results", "keyword": "best portable water filters camping tested", "category": "Camping", "products": ["Sawyer Squeeze", "LifeStraw Personal", "Katadyn BeFree", "MSR TrailShot"]},
-    {"title": "Camping Chairs for People with Bad Backs (Comfort Tested)", "keyword": "best camping chairs back support comfort", "category": "Camping", "products": ["Helinox Chair One", "ALPS Mountaineering King Kong", "Kijaro Dual Lock", "REI Co-op Flexlite Air"]},
-
-    # Caza
-    {"title": "Best Hunting Boots for Cold Weather: A Field Review", "keyword": "best hunting boots cold weather field review", "category": "Hunting", "products": ["Irish Setter Vaprtrek", "LaCrosse Alpha Agility", "Danner Pronghorn", "Muck Boot Arctic Pro"]},
-    {"title": "Hunting Binoculars: What Magnification Do You Actually Need?", "keyword": "best hunting binoculars magnification guide", "category": "Hunting", "products": ["Vortex Diamondback HD 10x42", "Leupold BX-4 Pro Guide", "Nikon Monarch M5 10x42", "Bushnell Legend Ultra HD"]},
-    {"title": "Tree Stand Safety: The Gear That Could Save Your Life", "keyword": "tree stand safety gear essential", "category": "Hunting", "products": ["Summit Viper SD", "XOP Vanish Evolution", "Hunter Safety System Ultra-Lite", "Muddy Safeguard Harness"]},
-    {"title": "Best Game Cameras Under $100 — Hidden Gem Picks", "keyword": "best game cameras under 100 dollars", "category": "Hunting", "products": ["Browning Strike Force Pro", "Stealth Cam G42NG", "Bushnell Core S-1", "Moultrie A-40i"]},
-    {"title": "Do You Actually Need a Rangefinder for Hunting? (Honest Answer)", "keyword": "rangefinders for hunters honest review", "category": "Hunting", "products": ["Vortex Ranger 1800", "Leupold RX-1400i TBR", "Bushnell Prime 1300", "SIG SAUER KILO3000BDX"]},
-
-    # Supervivencia & EDC
-    {"title": "Survival Knives: What Experts Actually Carry in the Field", "keyword": "best survival knives experts carry", "category": "Survival", "products": ["Morakniv Companion", "ESEE 6P", "Benchmade Bugout", "Ka-Bar Becker BK2"]},
-    {"title": "Fire Starters That Work Even in Rain and Wind", "keyword": "best fire starters emergency rain wind", "category": "Survival", "products": ["Uberleben Zunden", "UST BlastMatch", "Light My Fire Swedish FireSteel", "Bayite Ferrocerium Rod"]},
-    {"title": "The Best Multi-Tools for Every Outdoor Adventure", "keyword": "best multi tools outdoor adventure 2026", "category": "Survival", "products": ["Leatherman Wave Plus", "Victorinox SwissTool Spirit", "Gerber Center-Drive", "SOG PowerAccess Deluxe"]},
-
-    # Senderismo
-    {"title": "Hiking Boots vs Trail Runners: Which Should You Actually Buy?", "keyword": "hiking boots vs trail runners which to buy", "category": "Hiking", "products": ["Salomon X Ultra 4 GTX", "Brooks Cascadia 16", "Merrell Moab 3 GTX", "Hoka Speedgoat 5"]},
-    {"title": "Trekking Poles for Bad Knees: What Actually Helps", "keyword": "best trekking poles bad knees pain", "category": "Hiking", "products": ["Black Diamond Trail Ergo Cork", "Leki Micro Vario Carbon", "REI Co-op Traverse", "Cascade Mountain Tech Carbon"]},
-    {"title": "What's Inside a Pro Hiker's Daypack? (Full Gear List)", "keyword": "pro hiker daypack full gear list", "category": "Hiking", "products": ["Osprey Talon 22", "Gregory Zulu 35", "Deuter Speed Lite 21", "Arc'teryx Aerios 30"]},
-]
-
 
 # ── Claude API ─────────────────────────────────────────────────────────────────
 
-def call_claude(prompt: str, retries: int = 3) -> str:
+class ClaudeError(Exception):
+    pass
+
+
+class ClaudeRateLimitError(ClaudeError):
+    pass
+
+
+class ClaudeHTTPError(ClaudeError):
+    pass
+
+
+class ClaudeEmptyResponseError(ClaudeError):
+    pass
+
+
+def _extract_retry_after_seconds(error: urllib.error.HTTPError) -> Optional[int]:
+    try:
+        retry_after = error.headers.get("Retry-After")
+        if retry_after and str(retry_after).isdigit():
+            return int(retry_after)
+    except Exception:
+        pass
+    return None
+
+
+def _extract_text_from_anthropic_response(data: dict) -> str:
+    parts = []
+    for block in data.get("content", []):
+        if block.get("type") == "text":
+            txt = block.get("text", "")
+            if txt:
+                parts.append(txt)
+    return "\n".join(parts).strip()
+
+
+def call_claude(
+    prompt: str,
+    retries: int = 4,
+    max_tokens: int = MAX_TOKENS_ARTICLE,
+    use_web_search: bool = False,
+) -> str:
+    if not ANTHROPIC_KEY:
+        raise ClaudeError("Falta ANTHROPIC_KEY en variables de entorno")
+
+    last_error = None
+
     for attempt in range(retries):
+        if attempt > 0:
+            backoff = API_PAUSE_ON_429 + ((attempt - 1) * 45) + random.randint(5, 20)
+            log.info(f"Esperando {backoff}s antes de reintentar Claude...")
+            time.sleep(backoff)
+
         try:
-            payload = json.dumps({
-                "model": "claude-sonnet-4-20250514",
-                "max_tokens": 2500,
-                "messages": [{"role": "user", "content": prompt}]
-            }).encode()
+            payload_dict = {
+                "model": ANTHROPIC_MODEL,
+                "max_tokens": max_tokens,
+                "messages": [{"role": "user", "content": prompt}],
+            }
+
+            if use_web_search:
+                payload_dict["tools"] = [
+                    {"type": "web_search_20250305", "name": "web_search"}
+                ]
+
+            payload = json.dumps(payload_dict).encode("utf-8")
 
             req = urllib.request.Request(
                 "https://api.anthropic.com/v1/messages",
                 data=payload,
                 headers={
-                    "Content-Type":      "application/json",
-                    "x-api-key":         ANTHROPIC_KEY,
+                    "Content-Type": "application/json",
+                    "x-api-key": ANTHROPIC_KEY,
                     "anthropic-version": "2023-06-01",
                 },
                 method="POST"
             )
-            with urllib.request.urlopen(req, timeout=60) as r:
-                data = json.loads(r.read().decode())
-            text = data["content"][0]["text"]
 
+            with urllib.request.urlopen(req, timeout=120) as r:
+                data = json.loads(r.read().decode("utf-8"))
+
+            text = _extract_text_from_anthropic_response(data)
+
+            if not text:
+                raise ClaudeEmptyResponseError(
+                    f"Respuesta vacia de Claude: {json.dumps(data)[:1200]}"
+                )
+
+            return text
+
+        except urllib.error.HTTPError as e:
+            body = ""
             try:
-                json.loads(text)
-                return text
-            except json.JSONDecodeError:
-                match = re.search(r"\{.*\}", text, re.DOTALL)
-                if match:
-                    json.loads(match.group())
-                    return match.group()
-                raise ValueError("JSON invalido")
+                body = e.read().decode("utf-8", errors="ignore")
+            except Exception:
+                body = ""
+
+            retry_after = _extract_retry_after_seconds(e)
+
+            if e.code == 429:
+                wait_hint = retry_after if retry_after is not None else API_PAUSE_ON_429
+                log.warning(
+                    f"Rate limit (429) en intento {attempt+1}/{retries}. "
+                    f"Retry-After={retry_after}. Body={body[:700]}"
+                )
+                last_error = ClaudeRateLimitError(
+                    f"429 rate limit. Retry-After={retry_after}. Body={body[:1000]}"
+                )
+
+                if attempt == retries - 1:
+                    raise last_error
+
+                sleep_for = max(wait_hint, API_PAUSE_ON_429) + random.randint(5, 15)
+                log.info(f"Esperando {sleep_for}s por rate limit antes del siguiente intento...")
+                time.sleep(sleep_for)
+                continue
+
+            last_error = ClaudeHTTPError(f"HTTP {e.code}: {body[:1000]}")
+            log.warning(f"HTTP {e.code} en intento {attempt+1}/{retries}: {body[:700]}")
+
+            if attempt == retries - 1:
+                raise last_error
+
+        except urllib.error.URLError as e:
+            last_error = ClaudeError(f"Network error: {e}")
+            log.warning(f"Error de red en intento {attempt+1}/{retries}: {e}")
+
+            if attempt == retries - 1:
+                raise last_error
+
+        except ClaudeError as e:
+            last_error = e
+            log.warning(f"ClaudeError en intento {attempt+1}/{retries}: {e}")
+
+            if attempt == retries - 1:
+                raise last_error
 
         except Exception as e:
-            log.warning(f"Intento {attempt+1}/{retries} fallido: {e}")
+            last_error = ClaudeError(str(e))
+            log.warning(f"Error en intento {attempt+1}/{retries}: {e}")
+
+            if attempt == retries - 1:
+                raise last_error
+
+    raise ClaudeError(str(last_error) if last_error else "Claude fallo sin detalle")
+
+
+def call_claude_json(
+    prompt: str,
+    retries: int = 4,
+    max_tokens: int = MAX_TOKENS_ARTICLE,
+    use_web_search: bool = False
+) -> dict:
+    last_raw = ""
+
+    for attempt in range(retries):
+        try:
+            if attempt > 0 and last_raw:
+                fix_prompt = (
+                    "The following content was intended to be a valid JSON object but may be malformed.\n"
+                    "Return ONLY the corrected valid JSON object.\n"
+                    "No markdown fences. No explanation. No extra text.\n\n"
+                    + last_raw[:6000]
+                )
+                raw = call_claude(
+                    fix_prompt,
+                    retries=3,
+                    max_tokens=max_tokens,
+                    use_web_search=False,
+                )
+            else:
+                raw = call_claude(
+                    prompt,
+                    retries=3,
+                    max_tokens=max_tokens,
+                    use_web_search=use_web_search,
+                )
+
+            last_raw = raw
+            return parse_json_robust(raw)
+
+        except json.JSONDecodeError as e:
+            log.warning(f"JSON invalido en intento {attempt+1}/{retries}: {e}")
             if attempt < retries - 1:
-                time.sleep(5)
-    raise ValueError(f"Fallo despues de {retries} intentos")
+                time.sleep(API_JSON_RETRY_PAUSE)
+
+        except ClaudeRateLimitError as e:
+            log.warning(f"Rate limit real en intento JSON {attempt+1}/{retries}: {e}")
+            if attempt < retries - 1:
+                time.sleep(API_PAUSE_ON_429 + random.randint(10, 25))
+
+        except ClaudeError as e:
+            log.warning(f"Claude fallo en intento JSON {attempt+1}/{retries}: {e}")
+            if attempt < retries - 1:
+                time.sleep(API_JSON_RETRY_PAUSE)
+
+        except Exception as e:
+            log.warning(f"Fallo inesperado en intento JSON {attempt+1}/{retries}: {e}")
+            if attempt < retries - 1:
+                time.sleep(API_JSON_RETRY_PAUSE)
+
+    raise ValueError("No se pudo obtener JSON valido despues de todos los intentos")
 
 
-def amazon_link(product: str, tag: str) -> str:
+def parse_json_robust(text: str) -> dict:
+    text = text.strip()
+    text = re.sub(r'^```json\s*', '', text, flags=re.MULTILINE)
+    text = re.sub(r'^```\s*', '', text, flags=re.MULTILINE)
+    text = re.sub(r'```\s*$', '', text, flags=re.MULTILINE)
+    text = text.strip()
+
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+
+    match = re.search(r'\{.*\}', text, re.DOTALL)
+    if match:
+        try:
+            return json.loads(match.group())
+        except json.JSONDecodeError:
+            pass
+
+    for closing in [']}', '}}', '}']:
+        try:
+            return json.loads(text + closing)
+        except json.JSONDecodeError:
+            pass
+
+    raise json.JSONDecodeError("No se pudo parsear", text, 0)
+
+
+# ── Generador de titulos ───────────────────────────────────────────────────────
+
+def generate_titles(count: int = 20) -> list:
+    log.info(f"Generando {count} titulos con busqueda de tendencias...")
+
+    prompt = f"""You are an SEO expert building a content strategy for {SITE_NAME}, 
+an affiliate site about {SITE_TOPIC} targeting {SITE_AUDIENCE}.
+
+Use web_search to research:
+- Current trending searches related to {SITE_TOPIC} in 2026
+- High-volume, low-competition keywords in this niche
+- Popular product comparisons and buyer-intent searches
+
+Then generate {count} article titles optimized for SEO and Amazon affiliate conversions.
+
+Title format requirements:
+- VARY the format: comparisons, how-tos, guides, questions, "vs" articles, "under $X", seasonal content
+- NOT all "Best X" titles — mix it up
+- Target long-tail keywords with real search volume
+- High buyer intent
+- Natural, human-sounding
+
+Return ONLY a valid JSON array, no markdown, no extra text:
+[
+  {{
+    "title": "Article title here",
+    "keyword": "target keyword",
+    "category": "Category Name",
+    "products": ["Brand Model 1", "Brand Model 2", "Brand Model 3"],
+    "search_volume": "high"
+  }}
+]"""
+
+    raw = call_claude(
+        prompt,
+        retries=4,
+        max_tokens=MAX_TOKENS_TITLES,
+        use_web_search=ENABLE_WEB_SEARCH_FOR_TITLES,
+    )
+
+    match = re.search(r'\[.*\]', raw, re.DOTALL)
+    if not match:
+        raise ValueError("Claude no devolvio un array JSON")
+
+    titles = json.loads(match.group())
+    log.info(f"Titulos generados: {len(titles)}")
+    return titles
+
+
+def load_titles() -> list:
+    if TITLES_FILE.exists():
+        return json.loads(TITLES_FILE.read_text())
+    return []
+
+
+def save_titles(titles: list):
+    TITLES_FILE.parent.mkdir(exist_ok=True)
+    TITLES_FILE.write_text(json.dumps(titles, indent=2, ensure_ascii=False))
+    log.info(f"Guardados {len(titles)} titulos en {TITLES_FILE}")
+
+
+def get_next_title(published: list, titles: list):
+    published_titles = {p["title"] for p in published}
+    available = [t for t in titles if t["title"] not in published_titles]
+    high = [t for t in available if t.get("search_volume") == "high"]
+    med  = [t for t in available if t.get("search_volume") == "medium"]
+    low  = [t for t in available if t.get("search_volume") == "low"]
+    queue = high + med + low
+    return queue[0] if queue else None
+
+
+def ensure_titles(min_titles: int = 10) -> list:
+    published = load_posts_meta()
+    published_titles = {p["title"] for p in published}
+    titles = load_titles()
+    available = [t for t in titles if t["title"] not in published_titles]
+
+    if len(available) < min_titles:
+        log.info(f"Solo {len(available)} titulos disponibles — generando mas...")
+        new_titles = generate_titles(count=20)
+        existing = {t["title"] for t in titles}
+        for t in new_titles:
+            if t["title"] not in existing:
+                titles.append(t)
+        save_titles(titles)
+        available = [t for t in titles if t["title"] not in published_titles]
+        log.info(f"Ahora hay {len(available)} titulos disponibles")
+
+    return titles
+
+
+# ── Generador de articulos ─────────────────────────────────────────────────────
+
+def generate_article(topic: dict) -> dict:
+    products_str = "\n".join(f"- {p}" for p in topic["products"])
+
+    prompt = f"""You are an expert gear reviewer for {SITE_NAME}, a trusted site about {SITE_TOPIC}.
+Write a comprehensive SEO-optimized review for {SITE_AUDIENCE}.
+
+Title: {topic["title"]}
+Target keyword: {topic["keyword"]}
+Category: {topic["category"]}
+Products:
+{products_str}
+
+Return ONLY a valid JSON object. No markdown, no text before or after.
+
+{{
+  "intro": "2-3 paragraphs. Include the target keyword naturally. Explain who this is for.",
+  "products": [
+    {{
+      "name": "Exact product name",
+      "rating": 4.5,
+      "price_range": "$X - $Y",
+      "verdict": "One punchy sentence.",
+      "pros": ["pro 1", "pro 2", "pro 3"],
+      "cons": ["con 1", "con 2"],
+      "review": "2 paragraphs. Specific specs, real-world performance, who it suits best."
+    }}
+  ],
+  "buying_guide": "2 paragraphs. What to look for. Show real expertise.",
+  "faq": [
+    {{"q": "Question buyers ask?", "a": "Detailed answer."}},
+    {{"q": "Another question?", "a": "Detailed answer."}}
+  ],
+  "conclusion": "1 paragraph. Clear recommendation with call to action."
+}}"""
+
+    log.info(f"Generating: {topic['title']}")
+    return call_claude_json(
+        prompt,
+        retries=4,
+        max_tokens=MAX_TOKENS_ARTICLE,
+        use_web_search=ENABLE_WEB_SEARCH_FOR_ARTICLES,
+    )
+
+
+# ── Render HTML ────────────────────────────────────────────────────────────────
+
+def amazon_link(product: str) -> str:
     q = urllib.parse.quote_plus(product)
-    return f"https://www.amazon.com/s?k={q}&tag={tag}"
+    return f"https://www.{AMAZON_STORE}/s?k={q}&tag={AMAZON_TAG}"
 
 
 def slugify(text: str) -> str:
     text = text.lower()
     text = re.sub(r"[^\w\s-]", "", text)
     text = re.sub(r"[\s_]+", "-", text)
-    return text.strip("-")
+    return text.strip("-")[:80]
 
-
-# ── Generador ─────────────────────────────────────────────────────────────────
-
-def generate_article(topic: dict) -> dict:
-    products_str = "\n".join(f"- {p}" for p in topic["products"])
-
-    prompt = f"""You are an expert outdoor gear reviewer writing for TackleReviewer.com, a trusted US site covering fishing, hunting, camping and hiking. Write a comprehensive SEO-optimized article.
-
-Title: {topic["title"]}
-Target keyword: {topic["keyword"]}
-Category: {topic["category"]}
-Products to review:
-{products_str}
-
-IMPORTANT: Respond with ONLY a valid JSON object. No markdown, no code fences, no extra text before or after.
-
-{{
-  "intro": "2-3 paragraphs that naturally include the target keyword. Explain who this guide is for and what problem it solves.",
-  "products": [
-    {{
-      "name": "Product Name",
-      "rating": 4.5,
-      "price_range": "$X - $Y",
-      "verdict": "One sentence verdict.",
-      "pros": ["pro 1", "pro 2", "pro 3"],
-      "cons": ["con 1", "con 2"],
-      "review": "2 paragraphs: specific specs, real-world performance, who it is best for."
-    }}
-  ],
-  "buying_guide": "2 paragraphs on what to look for. Include technical details that show real expertise.",
-  "faq": [
-    {{"q": "Common question?", "a": "Detailed answer."}},
-    {{"q": "Another question?", "a": "Detailed answer."}}
-  ],
-  "conclusion": "1 paragraph conclusion with a clear recommendation."
-}}
-
-Write for a US outdoor audience. Be specific and honest. Vary tone — not every article needs to sound identical."""
-
-    log.info(f"Generating: {topic['title']}")
-    raw = call_claude(prompt)
-
-    try:
-        return json.loads(raw)
-    except json.JSONDecodeError:
-        match = re.search(r"\{.*\}", raw, re.DOTALL)
-        if match:
-            return json.loads(match.group())
-        raise ValueError("No se pudo parsear el JSON")
-
-
-# ── HTML ───────────────────────────────────────────────────────────────────────
 
 def render_html(topic: dict, content: dict, slug: str, date_display: str) -> str:
     products_html = ""
     for i, p in enumerate(content.get("products", []), 1):
-        alink = amazon_link(p["name"], AMAZON_TAG)
+        alink = amazon_link(p["name"])
         pros  = "".join(f"<li>{x}</li>" for x in p.get("pros", []))
         cons  = "".join(f"<li>{x}</li>" for x in p.get("cons", []))
         badge = "Editor's Pick" if i == 1 else ("Best Value" if i == 2 else "")
@@ -232,17 +489,14 @@ def render_html(topic: dict, content: dict, slug: str, date_display: str) -> str
         f'<li><a href="#pick-{i+1}">{p["name"]}</a></li>'
         for i, p in enumerate(content.get("products", []))
     )
-    buying     = content.get("buying_guide", "").replace("\n", "<br>")
-    intro      = content.get("intro", "").replace("\n", "<br>")
-    conclusion = content.get("conclusion", "").replace("\n", "<br>")
 
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="{topic['title']} — Expert reviews and buying guide updated {date_display[:4]}.">
-<title>{topic['title']} | TackleReviewer</title>
-<link rel="canonical" href="https://tacklereviewer.vercel.app/posts/{slug}.html">
+<meta name="description" content="{topic['title']} — Expert reviews updated {date_display[:4]}.">
+<title>{topic['title']} | {SITE_NAME}</title>
+<link rel="canonical" href="{SITE_URL}/posts/{slug}.html">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=Source+Sans+3:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -285,7 +539,7 @@ h1{{font-family:var(--serif);font-size:clamp(24px,4vw,36px);line-height:1.2;font
 .faq-item{{border:1px solid var(--border);border-radius:8px;margin-bottom:10px;overflow:hidden}}
 .faq-item summary{{padding:14px 18px;font-size:15px;font-weight:500;cursor:pointer;list-style:none;display:flex;justify-content:space-between}}
 .faq-item summary::after{{content:"+"}}
-.faq-item[open] summary::after{{content:"minus"}}
+.faq-item[open] summary::after{{content:"-"}}
 .faq-item p{{padding:0 18px 16px;font-size:14px;color:var(--muted);line-height:1.7}}
 .conclusion{{background:var(--accent-bg);border-radius:var(--radius);padding:24px;font-size:15px;line-height:1.8;border:1px solid rgba(27,107,58,.15)}}
 footer{{border-top:1px solid var(--border);margin-top:56px;padding:24px 20px;text-align:center;font-size:12px;color:var(--muted)}}
@@ -296,19 +550,19 @@ footer a{{color:var(--muted)}}
 <body>
 <header class="site-header">
   <div class="header-inner">
-    <div class="logo">Tackle<span>Reviewer</span></div>
-    <nav class="nav"><a href="/">Home</a><a href="/#fishing">Fishing</a><a href="/#camping">Camping</a><a href="/#hunting">Hunting</a></nav>
+    <div class="logo">{SITE_NAME}<span> Reviews</span></div>
+    <nav class="nav"><a href="/">Home</a></nav>
   </div>
 </header>
 <main class="container">
   <div class="article-category">{topic["category"]}</div>
   <h1>{topic["title"]}</h1>
   <div class="article-meta">
-    <span>By TackleReviewer Staff</span><span>·</span>
+    <span>By {SITE_NAME} Staff</span><span>·</span>
     <span class="updated">Updated {date_display}</span><span>·</span>
-    <span>{len(content.get("products", []))} products reviewed</span>
+    <span>{len(content.get("products",[]))} products reviewed</span>
   </div>
-  <div class="intro">{intro}</div>
+  <div class="intro">{content.get("intro","").replace(chr(10),"<br>")}</div>
   <div class="quick-nav">
     <h3>In This Review</h3>
     <ol>{quick_links}<li><a href="#buying-guide">Buying Guide</a></li><li><a href="#faq">FAQ</a></li></ol>
@@ -317,14 +571,14 @@ footer a{{color:var(--muted)}}
   {products_html}
   <div class="ad-slot">Advertisement</div>
   <h2 class="section-title" id="buying-guide">Buying Guide</h2>
-  <div class="buying-guide">{buying}</div>
+  <div class="buying-guide">{content.get("buying_guide","").replace(chr(10),"<br>")}</div>
   <h2 class="section-title" id="faq">Frequently Asked Questions</h2>
   {faq_html}
   <h2 class="section-title">Our Verdict</h2>
-  <div class="conclusion">{conclusion}</div>
+  <div class="conclusion">{content.get("conclusion","").replace(chr(10),"<br>")}</div>
 </main>
 <footer>
-  <p>TackleReviewer — Independent outdoor gear reviews</p>
+  <p>{SITE_NAME} — Independent gear reviews</p>
   <p style="margin-top:6px">As an Amazon Associate we earn from qualifying purchases · <a href="/privacy.html">Privacy Policy</a></p>
 </footer>
 </body>
@@ -335,15 +589,19 @@ footer a{{color:var(--muted)}}
 
 def rebuild_index(posts_meta: list):
     cards = "".join(
-        f'<a class="post-card" href="posts/{p["slug"]}.html"><div class="post-cat">{p["category"]}</div><h2 class="post-title">{p["title"]}</h2><div class="post-meta">{p["date"]} · {p.get("product_count",3)} products reviewed</div></a>'
+        f'<a class="post-card" href="posts/{p["slug"]}.html">'
+        f'<div class="post-cat">{p["category"]}</div>'
+        f'<h2 class="post-title">{p["title"]}</h2>'
+        f'<div class="post-meta">{p["date"]} · {p.get("product_count",3)} products reviewed</div>'
+        f'</a>'
         for p in sorted(posts_meta, key=lambda x: x["date"], reverse=True)
     )
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="TackleReviewer — Expert fishing, hunting and camping gear reviews. Honest picks for every budget.">
-<title>TackleReviewer — Fishing, Hunting and Camping Gear Reviews 2026</title>
+<meta name="description" content="{SITE_NAME} — Expert {SITE_TOPIC} reviews. Honest picks for every budget.">
+<title>{SITE_NAME} — Gear Reviews 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=Source+Sans+3:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -371,17 +629,17 @@ footer a{{color:var(--muted)}}
 </style>
 </head>
 <body>
-<header class="site-header"><div class="header-inner"><div class="logo">Tackle<span>Reviewer</span></div></div></header>
+<header class="site-header"><div class="header-inner"><div class="logo">{SITE_NAME}<span> Reviews</span></div></div></header>
 <section class="hero"><div class="hero-inner">
-  <h1>Honest Outdoor Gear Reviews You Can Trust</h1>
-  <p>Independent reviews of fishing, hunting, camping and hiking gear so you spend less time researching and more time outdoors.</p>
+  <h1>Honest Gear Reviews You Can Trust</h1>
+  <p>Independent reviews of {SITE_TOPIC} so you spend less time researching and more time outdoors.</p>
 </div></section>
 <main>
   <div class="section-label">Latest Reviews</div>
-  <div class="posts-grid">{cards if cards else "<p style='color:var(--muted);padding:40px 0'>No articles yet.</p>"}</div>
+  <div class="posts-grid">{cards or "<p style='color:var(--muted);padding:40px 0'>No articles yet.</p>"}</div>
 </main>
 <footer>
-  <p>TackleReviewer — Independent outdoor gear reviews</p>
+  <p>{SITE_NAME} — Independent gear reviews</p>
   <p style="margin-top:6px">As an Amazon Associate we earn from qualifying purchases · <a href="/privacy.html">Privacy Policy</a></p>
 </footer>
 </body></html>"""
@@ -391,27 +649,28 @@ footer a{{color:var(--muted)}}
 
 
 def rebuild_sitemap(posts_meta: list):
-    base = "https://tacklereviewer.vercel.app"
-    urls = [f"<url><loc>{base}/</loc></url>"] + [
-        f"<url><loc>{base}/posts/{p['slug']}.html</loc><lastmod>{p['date']}</lastmod></url>"
+    urls = [f"<url><loc>{SITE_URL}/</loc></url>"] + [
+        f"<url><loc>{SITE_URL}/posts/{p['slug']}.html</loc><lastmod>{p['date']}</lastmod></url>"
         for p in posts_meta
     ]
-    xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + "\n".join(urls) + "\n</urlset>"
-    with open(REPO_DIR / "sitemap.xml", "w") as f:
+    xml = ('<?xml version="1.0" encoding="UTF-8"?>\n'
+           '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+           + "\n".join(urls) + "\n</urlset>")
+    with open(REPO_DIR / "sitemap.xml", "w", encoding="utf-8") as f:
         f.write(xml)
     log.info("sitemap.xml rebuilt")
 
 
 # ── Git ────────────────────────────────────────────────────────────────────────
 
-def git_push(message: str):
+def git_push(message: str) -> bool:
     for cmd in [
         ["git", "-C", str(REPO_DIR), "add", "-A"],
         ["git", "-C", str(REPO_DIR), "commit", "-m", message],
         ["git", "-C", str(REPO_DIR), "push"],
     ]:
         r = subprocess.run(cmd, capture_output=True, text=True)
-        if r.returncode != 0 and "nothing to commit" not in r.stdout + r.stderr:
+        if r.returncode != 0 and "nothing to commit" not in (r.stdout + r.stderr):
             log.warning(f"git: {r.stderr.strip()}")
             return False
     log.info(f"Pushed: {message}")
@@ -429,17 +688,22 @@ def save_posts_meta(meta: list):
     DATA_FILE.write_text(json.dumps(meta, indent=2, ensure_ascii=False))
 
 
-def get_next_topic(published: list):
-    published_titles = {p["title"] for p in published}
-    return next((t for t in TOPICS if t["title"] not in published_titles), None)
-
-
 def run_once(date_override: str = None) -> bool:
-    posts_meta = load_posts_meta()
-    topic = get_next_topic(posts_meta)
+    titles    = ensure_titles(min_titles=5)
+    published = load_posts_meta()
+    topic     = get_next_title(published, titles)
+
     if not topic:
-        log.info("Todos los temas cubiertos.")
-        return False
+        log.info("Sin titulos disponibles — generando nuevos...")
+        titles    = ensure_titles(min_titles=0)
+        published = load_posts_meta()
+        topic     = get_next_title(published, titles)
+        if not topic:
+            log.error("No se pudieron generar titulos.")
+            return False
+
+    log.info(f"Pausa de {API_PAUSE_BETWEEN_CALLS}s antes de generar...")
+    time.sleep(API_PAUSE_BETWEEN_CALLS)
 
     try:
         content = generate_article(topic)
@@ -457,7 +721,7 @@ def run_once(date_override: str = None) -> bool:
     )
     log.info(f"Saved: {slug}.html")
 
-    posts_meta.append({
+    published.append({
         "title":         topic["title"],
         "slug":          slug,
         "category":      topic["category"],
@@ -465,22 +729,24 @@ def run_once(date_override: str = None) -> bool:
         "keyword":       topic["keyword"],
         "product_count": len(content.get("products", [])),
     })
-    save_posts_meta(posts_meta)
-    rebuild_index(posts_meta)
-    rebuild_sitemap(posts_meta)
+    save_posts_meta(published)
+    rebuild_index(published)
+    rebuild_sitemap(published)
     git_push(f"content: {topic['title'][:60]}")
-    remaining = sum(1 for t in TOPICS if t["title"] not in {p["title"] for p in posts_meta})
-    log.info(f"Done. {remaining} topics remaining.")
+
+    remaining = sum(1 for t in titles if t["title"] not in {p["title"] for p in published})
+    log.info(f"Done. ~{remaining} titulos restantes.")
     return True
 
 
 # ── Main ───────────────────────────────────────────────────────────────────────
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--loop",  action="store_true", help="1 articulo por dia indefinidamente")
-    parser.add_argument("--batch", type=int, metavar="N", help="Genera N articulos con fechas escalonadas")
-    parser.add_argument("--build", action="store_true", help="Solo regenera index y sitemap")
+    parser = argparse.ArgumentParser(description="Universal Affiliate Content Bot")
+    parser.add_argument("--loop",      action="store_true", help="1 articulo por dia indefinidamente")
+    parser.add_argument("--batch",     type=int, metavar="N", help="Genera N articulos con fechas escalonadas")
+    parser.add_argument("--gentitles", type=int, metavar="N", help="Solo genera N titulos nuevos")
+    parser.add_argument("--build",     action="store_true", help="Solo regenera index y sitemap")
     args = parser.parse_args()
 
     if args.build:
@@ -490,16 +756,26 @@ def main():
         git_push("build: rebuild index and sitemap")
         return
 
+    if args.gentitles:
+        log.info(f"Generando {args.gentitles} titulos nuevos...")
+        titles     = load_titles()
+        new_titles = generate_titles(count=args.gentitles)
+        existing   = {t["title"] for t in titles}
+        added = sum(1 for t in new_titles if t["title"] not in existing and titles.append(t) is None)
+        save_titles(titles)
+        log.info(f"Agregados {added} titulos. Total: {len(titles)}")
+        git_push(f"titles: generated {added} new SEO titles")
+        return
+
     if args.batch:
         log.info(f"Modo batch: {args.batch} articulos con fechas escalonadas")
         for i in range(args.batch):
             date = (datetime.now() - timedelta(days=args.batch - i - 1)).strftime("%Y-%m-%d")
             log.info(f"Articulo {i+1}/{args.batch} — fecha: {date}")
-            if not run_once(date_override=date):
-                break
+            run_once(date_override=date)
             if i < args.batch - 1:
-                pause = random.randint(20, 50)
-                log.info(f"Pausa {pause}s...")
+                pause = random.randint(BATCH_PAUSE_MIN, BATCH_PAUSE_MAX)
+                log.info(f"Pausa {pause}s entre articulos...")
                 time.sleep(pause)
         return
 
