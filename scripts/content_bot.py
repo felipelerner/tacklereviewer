@@ -490,6 +490,77 @@ def render_html(topic: dict, content: dict, slug: str, date_display: str) -> str
         for i, p in enumerate(content.get("products", []))
     )
 
+    # Schema markup — ItemList con cada producto
+    products = content.get("products", [])
+    schema_items = []
+    for i, p in enumerate(products, 1):
+        try:
+            rating_val = float(p.get("rating", 4.5))
+        except (ValueError, TypeError):
+            rating_val = 4.5
+        schema_items.append({
+            "@type": "ListItem",
+            "position": i,
+            "item": {
+                "@type": "Product",
+                "name": p.get("name", ""),
+                "description": p.get("verdict", ""),
+                "review": {
+                    "@type": "Review",
+                    "reviewRating": {
+                        "@type": "Rating",
+                        "ratingValue": rating_val,
+                        "bestRating": 5,
+                        "worstRating": 1
+                    },
+                    "author": {"@type": "Organization", "name": SITE_NAME},
+                    "reviewBody": p.get("verdict", "")
+                },
+                "offers": {
+                    "@type": "Offer",
+                    "url": amazon_link(p.get("name", "")),
+                    "availability": "https://schema.org/InStock"
+                }
+            }
+        })
+
+    schema_faq = []
+    for f in content.get("faq", []):
+        schema_faq.append({
+            "@type": "Question",
+            "name": f.get("q", ""),
+            "acceptedAnswer": {"@type": "Answer", "text": f.get("a", "")}
+        })
+
+    schema_ld = json.dumps({
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "ItemList",
+                "name": topic["title"],
+                "description": f"Expert review of the best {topic['keyword']}",
+                "numberOfItems": len(products),
+                "itemListElement": schema_items
+            },
+            {
+                "@type": "FAQPage",
+                "mainEntity": schema_faq
+            },
+            {
+                "@type": "WebPage",
+                "url": f"{SITE_URL}/posts/{slug}.html",
+                "name": topic["title"],
+                "dateModified": datetime.now().strftime("%Y-%m-%d"),
+                "author": {"@type": "Organization", "name": SITE_NAME},
+                "publisher": {
+                    "@type": "Organization",
+                    "name": SITE_NAME,
+                    "url": SITE_URL
+                }
+            }
+        ]
+    }, ensure_ascii=False)
+
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -497,6 +568,7 @@ def render_html(topic: dict, content: dict, slug: str, date_display: str) -> str
 <meta name="description" content="{topic['title']} — Expert reviews updated {date_display[:4]}.">
 <title>{topic['title']} | {SITE_NAME}</title>
 <link rel="canonical" href="{SITE_URL}/posts/{slug}.html">
+<script type="application/ld+json">{schema_ld}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=Source+Sans+3:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
