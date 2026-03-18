@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://tacklereviewer.vercel.app/sitemap.xml
