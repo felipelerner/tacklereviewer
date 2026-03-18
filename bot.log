@@ -224,3 +224,13 @@ error: failed to push some refs to 'https://github.com/felipelerner/tacklereview
 2026-03-17 23:59:22,629  INFO     Saved: trail-running-shoes-for-hiking-2026-hoka-speedgoat-7-vs-salomon-ultra-glide.html
 2026-03-17 23:59:22,631  INFO     index.html rebuilt
 2026-03-17 23:59:22,632  INFO     sitemap.xml rebuilt
+2026-03-17 23:59:25,456  INFO     Pushed: content: Trail Running Shoes for Hiking 2026: HOKA Speedgoat 7 vs Sal
+2026-03-17 23:59:25,456  INFO     Done. ~18 titulos restantes.
+2026-03-17 23:59:25,457  INFO     Pausa 150s entre articulos...
+2026-03-18 00:01:55,457  INFO     Articulo 2/3 — fecha: 2026-03-17
+2026-03-18 00:01:55,458  INFO     Pausa de 30s antes de generar...
+2026-03-18 00:02:25,459  INFO     Generating: How to Choose Your First Hunting Rifle: Complete Beginner's Guide 2026
+2026-03-18 00:03:30,785  WARNING  JSON invalido en intento 1/4: No se pudo parsear: line 1 column 1 (char 0)
+2026-03-18 00:03:55,080  INFO     Saved: how-to-choose-your-first-hunting-rifle-complete-beginners-guide-2026.html
+2026-03-18 00:03:55,092  INFO     index.html rebuilt
+2026-03-18 00:03:55,099  INFO     sitemap.xml rebuilt
