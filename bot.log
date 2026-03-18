@@ -60,3 +60,16 @@ error: failed to push some refs to 'https://github.com/felipelerner/tacklereview
 2026-03-17 22:42:25,280  WARNING  Intento 2/3 fallido: Expecting ',' delimiter: line 33 column 3 (char 6707)
 2026-03-17 22:43:15,118  WARNING  Intento 3/3 fallido: Expecting ',' delimiter: line 35 column 3 (char 7087)
 2026-03-17 22:43:15,119  ERROR    Error generando artículo: Falló después de 3 intentos
+2026-03-17 22:43:15,321  INFO     Generating article: Best Fishing Line for Bass: Mono vs Fluoro vs Braid
+2026-03-17 22:43:58,657  INFO     Article saved: d:\Escritorio\tacklereviewer\posts\best-fishing-line-for-bass-mono-vs-fluoro-vs-braid.html
+2026-03-17 22:43:58,660  INFO     index.html rebuilt
+2026-03-17 22:43:58,661  INFO     sitemap.xml rebuilt
+2026-03-17 22:44:01,407  INFO     Pushed: content: Best Fishing Line for Bass: Mono vs Fluoro vs Braid
+2026-03-17 22:44:01,407  INFO     Done. 11 topics remaining.
+2026-03-17 22:56:20,514  INFO     Modo batch: 10 articulos con fechas escalonadas
+2026-03-17 22:56:20,514  INFO     Articulo 1/10 — fecha: 2026-03-08
+2026-03-17 22:56:20,515  INFO     Generating: Shimano vs Daiwa: Which Reel Brand Wins in 2026?
+2026-03-17 22:57:14,360  WARNING  Intento 1/3 fallido: Expecting ',' delimiter: line 45 column 3 (char 7887)
+2026-03-17 22:58:16,620  WARNING  Intento 2/3 fallido: Expecting ',' delimiter: line 42 column 3 (char 9037)
+2026-03-17 22:59:13,747  WARNING  Intento 3/3 fallido: Expecting ',' delimiter: line 42 column 3 (char 7841)
+2026-03-17 22:59:13,748  ERROR    Error generando articulo: Fallo despues de 3 intentos
